@@ -1,0 +1,28 @@
+// Connect to your MongoDB database
+use twitter_database;
+
+var count = 0;
+var processed = 0;
+
+db.tweets.find({ 
+    "json_data.created_at": { $exists: true }, 
+    "json_data.datetime": { $exists: false } 
+}).forEach(function(doc) {
+    var dateString = doc.json_data.created_at;
+    var dateObject = new Date(Date.parse(dateString));
+
+    db.tweets.updateOne(
+        { _id: doc._id },
+        { $set: { "json_data.datetime": dateObject } }
+    );
+
+    count++;
+    if (count % 1000 === 0) { // Print every 1000 documents processed
+        print("Processed " + count + " documents.");
+    }
+
+    processed++;
+});
+
+print("Finished processing " + count + " documents.");
+print("Skipped processing " + processed + " documents.");
